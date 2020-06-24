@@ -3,10 +3,7 @@ package org.example
 import org.springframework.messaging.converter.MappingJackson2MessageConverter
 import org.springframework.messaging.simp.stomp.*
 import org.springframework.util.concurrent.SuccessCallback
-import org.springframework.web.socket.CloseStatus
-import org.springframework.web.socket.WebSocketHandler
-import org.springframework.web.socket.WebSocketMessage
-import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.*
 import org.springframework.web.socket.client.WebSocketClient
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator
@@ -28,7 +25,7 @@ internal class ApplicationKtTest {
 
         val sessionFeature = client.doHandshake(object : WebSocketHandler {
             override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
-                TODO("Not yet implemented")
+                exception.printStackTrace()
             }
 
             override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
@@ -36,20 +33,24 @@ internal class ApplicationKtTest {
             }
 
             override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
-                TODO("Not yet implemented")
+                // TODO("Not yet implemented")
+                val p = message.payload
+                println("handleMessage $p")
+
             }
 
             override fun afterConnectionEstablished(session: WebSocketSession) {
-                TODO("Not yet implemented")
+                // TODO("Not yet implemented")
             }
 
             override fun supportsPartialMessages(): Boolean {
-                TODO("Not yet implemented")
+                return false
             }
 
         }, URL)
 
-        sessionFeature.get()
+        val session = sessionFeature.get()
+        session.sendMessage(TextMessage("Hello!"))
 
 //            .doHandshake(LoggingWebSocketHandlerDecorator(object : WebSocketHandler {
 //            }), URL)
