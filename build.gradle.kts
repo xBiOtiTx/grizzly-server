@@ -32,6 +32,8 @@ dependencies {
 //    testImplementation("org.springframework.boot:spring-boot-starter-web")
 //    testImplementation("org.springframework.boot:spring-boot-starter-websocket")
     testImplementation("org.springframework.boot:spring-boot-starter-websocket:2.3.0.RELEASE")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:2.3.0.RELEASE")
+
 }
 
 tasks {

@@ -3,6 +3,8 @@ package org.example
 import org.example.dto.BaseMessage
 import org.example.dto.LocationDto
 import org.example.dto.MessageDto
+import org.example.starter.http.HttpServerFactory
+import org.example.starter.server.GrizzlyWebServer
 import org.glassfish.grizzly.http.HttpRequestPacket
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.websockets.*
@@ -12,7 +14,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-open class Application
+open class Application(
+    val grizzlyWebServer: GrizzlyWebServer
+) : CommandLineRunner {
+    override fun run(vararg args: String?) {
+        grizzlyWebServer.start()
+        Thread.currentThread().join()
+    }
+}
 
 fun main(args: Array<String>) {
     runApplication<Application>(*args)
