@@ -5,7 +5,6 @@ import org.springframework.boot.web.server.WebServer
 import org.springframework.boot.web.server.WebServerException
 import java.io.Closeable
 
-
 class GrizzlyWebServer(
     private val delegate: HttpServer
 ) : WebServer, Closeable {

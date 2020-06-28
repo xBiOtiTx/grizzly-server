@@ -17,12 +17,8 @@ dependencies {
     implementation("org.glassfish.grizzly:grizzly-http-servlet:2.4.0")
 
     implementation("org.springframework.boot:spring-boot:2.3.0.RELEASE")
-    implementation("org.springframework.boot:spring-boot-starter-jersey:2.3.0.RELEASE")
-//    {
-//        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
-//    }
+    implementation("org.springframework.boot:spring-boot-autoconfigure:2.3.0.RELEASE")
 
-//    implementation("org.springframework.boot:spring-boot-autoconfigure:2.3.0.RELEASE")
     implementation("org.yaml:snakeyaml")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.0")
