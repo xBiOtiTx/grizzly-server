@@ -6,6 +6,7 @@ import org.example.dto.MessageDto
 import org.glassfish.grizzly.Grizzly
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.web.socket.*
+import org.springframework.web.socket.adapter.standard.StandardWebSocketSession
 import org.springframework.web.socket.client.WebSocketClient
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 
@@ -36,23 +37,19 @@ internal class ApplicationKtTest {
     fun main() {
         val client: WebSocketClient = StandardWebSocketClient()
 
-        val session1 = client.doHandshake(MyWebSocketHandler(), URL).get()
-        val session2 = client.doHandshake(MyWebSocketHandler(), URL).get()
-        val session3 = client.doHandshake(MyWebSocketHandler(), URL).get()
-        val session4 = client.doHandshake(MyWebSocketHandler(), URL).get()
-        val session5 = client.doHandshake(MyWebSocketHandler(), URL).get()
-        val sessions = listOf(session1, session2, session3, session4, session5)
+        val sessions = mutableListOf<WebSocketSession>()
+        for (i in 1..100) {
+            sessions.add(client.doHandshake(MyWebSocketHandler(), URL).get())
+        }
 
         val messages = listOf(message, location)
-
-        for (i in 1..100) {
-            // Thread.sleep(100)
+        for (i in 1..10000) {
             LOGGER.info("sendMessage $i")
             val session = sessions.random()
             session.sendMessage(messages.random())
         }
 
-        Thread.sleep(3000)
+        Thread.sleep(10000)
     }
 }
 
