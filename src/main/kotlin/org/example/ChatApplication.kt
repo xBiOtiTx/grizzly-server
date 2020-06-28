@@ -3,12 +3,15 @@ package org.example
 import org.example.dto.BaseMessage
 import org.example.dto.LocationDto
 import org.example.dto.MessageDto
+import org.glassfish.grizzly.Grizzly
 import org.glassfish.grizzly.http.HttpRequestPacket
 import org.glassfish.grizzly.websockets.*
 
 class ChatApplication(
     val broadcaster: Broadcaster
 ) : WebSocketApplication() {
+    private val LOGGER = Grizzly.logger(ChatApplication::class.java)
+
     val sockets = mutableListOf<WebSocket>()
 
     override fun createSocket(
@@ -16,7 +19,7 @@ class ChatApplication(
         requestPacket: HttpRequestPacket,
         vararg listeners: WebSocketListener
     ): WebSocket {
-        println("createSocket")
+        LOGGER.info("createSocket")
         val socket = super.createSocket(
             handler,
             requestPacket,
@@ -28,47 +31,52 @@ class ChatApplication(
     }
 
     override fun onMessage(socket: WebSocket?, bytes: ByteArray?) {
-        println("onMessage")
+        LOGGER.info("onMessage")
         super.onMessage(socket, bytes)
     }
 
     override fun onPong(socket: WebSocket?, bytes: ByteArray) {
-        println("onPong: " + bytes.toString(Charsets.UTF_8))
+        LOGGER.info("onPong: " + bytes.toString(Charsets.UTF_8))
         super.onPong(socket, bytes)
     }
 
     override fun onPing(socket: WebSocket?, bytes: ByteArray?) {
-        println("onPing")
+        LOGGER.info("onPing")
         super.onPing(socket, bytes)
     }
 
     override fun onFragment(socket: WebSocket?, fragment: String?, last: Boolean) {
-        println("onFragment")
+        LOGGER.info("onFragment")
         super.onFragment(socket, fragment, last)
     }
 
     override fun onFragment(socket: WebSocket?, fragment: ByteArray?, last: Boolean) {
-        println("onFragment")
+        LOGGER.info("onFragment")
         super.onFragment(socket, fragment, last)
     }
 
     override fun onMessage(socket: WebSocket, text: String?) {
-        println("onMessage: $text")
+        LOGGER.info("onMessage: $text")
         val message = DtoMapper.MAPPER.readValue(text, BaseMessage::class.java)
         val type = message.headers["TYPE"]
         when (type) {
             "LOCATION" -> {
-                println("on LOCATION")
+                LOGGER.info("on LOCATION")
                 val dto = DtoMapper.MAPPER.readValue(message.payload, LocationDto::class.java)
-            }
-            "MESSAGE" -> {
-                println("on MESSAGE")
-                val dto = DtoMapper.MAPPER.readValue(message.payload, MessageDto::class.java)
-                Thread.sleep(3000)
                 socket.send(DtoMapper.MAPPER.writeValueAsString(
                     BaseMessage(
                         mapOf("TYPE" to "MESSAGE"),
-                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, client!"))
+                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, client(LOCATION)!"))
+                    )
+                ))
+            }
+            "MESSAGE" -> {
+                LOGGER.info("on MESSAGE")
+                val dto = DtoMapper.MAPPER.readValue(message.payload, MessageDto::class.java)
+                socket.send(DtoMapper.MAPPER.writeValueAsString(
+                    BaseMessage(
+                        mapOf("TYPE" to "MESSAGE"),
+                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, client(MESSAGE)!"))
                     )
                 ))
             }
@@ -76,19 +84,19 @@ class ChatApplication(
     }
 
     override fun onConnect(socket: WebSocket) {
-        println("onConnect")
+        LOGGER.info("onConnect")
         // socket.sendPing("server sendPing".toByteArray(Charsets.UTF_8))
         // socket.send("CONNECTED")
         super.onConnect(socket)
     }
 
     override fun onClose(socket: WebSocket?, frame: DataFrame?) {
-        println("onClose")
+        LOGGER.info("onClose")
         super.onClose(socket, frame)
     }
 
     override fun onError(webSocket: WebSocket?, t: Throwable?): Boolean {
-        println("onError")
+        LOGGER.info("onError")
         t?.printStackTrace()
         return super.onError(webSocket, t)
     }

@@ -4,6 +4,7 @@ import org.glassfish.grizzly.http.server.HttpServer
 import org.springframework.boot.web.server.WebServer
 import org.springframework.boot.web.server.WebServerException
 import java.io.Closeable
+import java.util.concurrent.TimeUnit
 
 class GrizzlyWebServer(
     private val delegate: HttpServer
@@ -18,7 +19,7 @@ class GrizzlyWebServer(
     }
 
     override fun stop() {
-        delegate.shutdownNow() // TODO gracefull params
+        delegate.shutdown(3000, TimeUnit.MILLISECONDS)
     }
 
     override fun getPort(): Int {

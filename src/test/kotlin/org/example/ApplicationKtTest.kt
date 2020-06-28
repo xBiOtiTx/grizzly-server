@@ -3,6 +3,7 @@ package org.example
 import org.example.dto.BaseMessage
 import org.example.dto.LocationDto
 import org.example.dto.MessageDto
+import org.glassfish.grizzly.Grizzly
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.web.socket.*
 import org.springframework.web.socket.client.WebSocketClient
@@ -10,59 +11,54 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient
 
 @SpringBootTest
 internal class ApplicationKtTest {
+    private val LOGGER = Grizzly.logger(ApplicationKtTest::class.java)
     private val URL = "ws://localhost:8080/echo"
+
+    val message = TextMessage(
+        DtoMapper.MAPPER.writeValueAsString(
+            BaseMessage(
+                mapOf("TYPE" to "MESSAGE"),
+                DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, server!(MESSAGE)"))
+            )
+        )
+    )
+
+    val location = TextMessage(
+        DtoMapper.MAPPER.writeValueAsString(
+            BaseMessage(
+                mapOf("TYPE" to "LOCATION"),
+                DtoMapper.MAPPER.writeValueAsBytes(LocationDto(0.0, 0.0))
+            )
+        )
+    )
 
     @org.junit.jupiter.api.Test
     fun main() {
-        println("start!")
-
         val client: WebSocketClient = StandardWebSocketClient()
 
-        val sessionFeature = client.doHandshake(MyWebSocketHandler(), URL)
-        val session = sessionFeature.get()
+        val session1 = client.doHandshake(MyWebSocketHandler(), URL).get()
+        val session2 = client.doHandshake(MyWebSocketHandler(), URL).get()
+        val session3 = client.doHandshake(MyWebSocketHandler(), URL).get()
+        val session4 = client.doHandshake(MyWebSocketHandler(), URL).get()
+        val session5 = client.doHandshake(MyWebSocketHandler(), URL).get()
+        val sessions = listOf(session1, session2, session3, session4, session5)
 
-        session.sendMessage(
-            TextMessage(
-                DtoMapper.MAPPER.writeValueAsString(
-                    BaseMessage(
-                        mapOf("TYPE" to "LOCATION"),
-                        DtoMapper.MAPPER.writeValueAsBytes(LocationDto(0.0, 0.0))
-                    )
-                )
-            )
-        )
+        val messages = listOf(message, location)
 
-        session.sendMessage(
-            TextMessage(
-                DtoMapper.MAPPER.writeValueAsString(
-                    BaseMessage(
-                        mapOf("TYPE" to "MESSAGE"),
-                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, World!"))
-                    )
-                )
-            )
-        )
-
-        Thread.sleep(1000)
-
-        for(i in 1..3) {
-            Thread.sleep(1000)
-            println("sendMessage $i")
-            session.sendMessage(
-                TextMessage(
-                    DtoMapper.MAPPER.writeValueAsString(
-                        BaseMessage(
-                            mapOf("TYPE" to "MESSAGE"),
-                            DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, server $i!"))
-                        )
-                    )
-                )
-            )
+        for (i in 1..100) {
+            // Thread.sleep(100)
+            LOGGER.info("sendMessage $i")
+            val session = sessions.random()
+            session.sendMessage(messages.random())
         }
+
+        Thread.sleep(3000)
     }
 }
 
 class MyWebSocketHandler() : WebSocketHandler {
+    private val LOGGER = Grizzly.logger(MyWebSocketHandler::class.java)
+
     override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
         exception.printStackTrace()
     }
@@ -74,7 +70,7 @@ class MyWebSocketHandler() : WebSocketHandler {
     override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
         // TODO("Not yet implemented")
         val p = message.payload
-        println("handleMessage $p")
+        LOGGER.info("handleMessage $p")
     }
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
