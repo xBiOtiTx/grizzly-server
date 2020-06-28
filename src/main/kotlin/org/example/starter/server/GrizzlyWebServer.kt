@@ -12,7 +12,6 @@ class GrizzlyWebServer(
     override fun start() {
         try {
             delegate.start()
-            Thread.currentThread().join()
         } catch (e: Exception) {
             throw WebServerException(e.message, e)
         }

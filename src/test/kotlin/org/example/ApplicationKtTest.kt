@@ -1,22 +1,12 @@
 package org.example
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.example.dto.BaseMessage
 import org.example.dto.LocationDto
 import org.example.dto.MessageDto
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.messaging.converter.MappingJackson2MessageConverter
-import org.springframework.messaging.simp.stomp.*
-import org.springframework.util.concurrent.SuccessCallback
 import org.springframework.web.socket.*
 import org.springframework.web.socket.client.WebSocketClient
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
-import org.springframework.web.socket.handler.LoggingWebSocketHandlerDecorator
-import org.springframework.web.socket.messaging.WebSocketStompClient
-import java.lang.reflect.Type
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 internal class ApplicationKtTest {
@@ -25,12 +15,10 @@ internal class ApplicationKtTest {
     @org.junit.jupiter.api.Test
     fun main() {
         println("start!")
-//        start()
 
         val client: WebSocketClient = StandardWebSocketClient()
 
         val sessionFeature = client.doHandshake(MyWebSocketHandler(), URL)
-
         val session = sessionFeature.get()
 
         session.sendMessage(
@@ -57,7 +45,7 @@ internal class ApplicationKtTest {
 
         Thread.sleep(1000)
 
-        for(i in 1..10) {
+        for(i in 1..3) {
             Thread.sleep(1000)
             println("sendMessage $i")
             session.sendMessage(
