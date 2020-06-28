@@ -1,5 +1,10 @@
 package org.example
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.example.dto.BaseMessage
+import org.example.dto.LocationDto
+import org.example.dto.MessageDto
 import org.springframework.messaging.converter.MappingJackson2MessageConverter
 import org.springframework.messaging.simp.stomp.*
 import org.springframework.util.concurrent.SuccessCallback
@@ -13,7 +18,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 internal class ApplicationKtTest {
-    //    private val URL = "ws://localhost:8080/app/chat"
     private val URL = "ws://localhost:8080/echo"
 
     @org.junit.jupiter.api.Test
@@ -23,95 +27,71 @@ internal class ApplicationKtTest {
 
         val client: WebSocketClient = StandardWebSocketClient()
 
-        val sessionFeature = client.doHandshake(object : WebSocketHandler {
-            override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
-                exception.printStackTrace()
-            }
-
-            override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-                TODO("Not yet implemented")
-            }
-
-            override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
-                // TODO("Not yet implemented")
-                val p = message.payload
-                println("handleMessage $p")
-
-            }
-
-            override fun afterConnectionEstablished(session: WebSocketSession) {
-                // TODO("Not yet implemented")
-            }
-
-            override fun supportsPartialMessages(): Boolean {
-                return false
-            }
-
-        }, URL)
+        val sessionFeature = client.doHandshake(MyWebSocketHandler(), URL)
 
         val session = sessionFeature.get()
-        session.sendMessage(TextMessage("Hello!"))
 
-//            .doHandshake(LoggingWebSocketHandlerDecorator(object : WebSocketHandler {
-//            }), URL)
-//            .addCallback(SuccessCallback {  })
+        session.sendMessage(
+            TextMessage(
+                DtoMapper.MAPPER.writeValueAsString(
+                    BaseMessage(
+                        mapOf("TYPE" to "LOCATION"),
+                        DtoMapper.MAPPER.writeValueAsBytes(LocationDto(0.0, 0.0))
+                    )
+                )
+            )
+        )
 
-//        val stompClient = WebSocketStompClient(client)
-//        stompClient.messageConverter = MappingJackson2MessageConverter()
+        session.sendMessage(
+            TextMessage(
+                DtoMapper.MAPPER.writeValueAsString(
+                    BaseMessage(
+                        mapOf("TYPE" to "MESSAGE"),
+                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, World!"))
+                    )
+                )
+            )
+        )
 
-//        val sessionHandler: StompSessionHandler = MyStompSessionHandler()
-//        val future = stompClient.connect(URL, sessionHandler)
-//        val session = future.get(5, TimeUnit.SECONDS) as StompSession
+        Thread.sleep(1000)
+
+        for(i in 1..10) {
+            Thread.sleep(1000)
+            println("sendMessage $i")
+            session.sendMessage(
+                TextMessage(
+                    DtoMapper.MAPPER.writeValueAsString(
+                        BaseMessage(
+                            mapOf("TYPE" to "MESSAGE"),
+                            DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, server $i!"))
+                        )
+                    )
+                )
+            )
+        }
+    }
+}
+
+class MyWebSocketHandler() : WebSocketHandler {
+    override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
+        exception.printStackTrace()
     }
 
-    class MyStompSessionHandler : StompSessionHandlerAdapter() {
-        override fun afterConnected(session: StompSession, connectedHeaders: StompHeaders) {
-            println("afterConnected")
-//            session.subscribe("/topic/messages", this)
-//            session.send("/app/chat", sampleMessage)
-        }
-
-        override fun handleException(
-            session: StompSession,
-            command: StompCommand,
-            headers: StompHeaders,
-            payload: ByteArray,
-            exception: Throwable
-        ) {
-            println("handleException")
-        }
-
-        override fun handleTransportError(session: StompSession, exception: Throwable) {
-            println("handleTransportError")
-            super.handleTransportError(session, exception)
-        }
-
-        override fun getPayloadType(headers: StompHeaders): Type {
-            println("getPayloadType")
-            return super.getPayloadType(headers)
-        }
-
-        override fun handleFrame(headers: StompHeaders, payload: Any) {
-            println("handleFrame")
-//            val msg: Message = payload as Message
-            return super.handleFrame(headers, payload)
-        }
-
-        /**
-         * A sample message instance.
-         * @return instance of `Message`
-         */
-//        private val sampleMessage: Message
-//            private get() {
-//                val msg = Message()
-//                msg.from = "Nicky"
-//                msg.text = "Howdy!!"
-//                return msg
-//            }
+    override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
+        TODO("Not yet implemented")
     }
-//
-//    class Message {
-//        var from: String? = null
-//        var text: String? = null
-//    }
+
+    override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
+        // TODO("Not yet implemented")
+        val p = message.payload
+        println("handleMessage $p")
+    }
+
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        // TODO("Not yet implemented")
+    }
+
+    override fun supportsPartialMessages(): Boolean {
+        return false
+    }
 }

@@ -1,27 +1,29 @@
 package org.example
 
+import org.example.dto.BaseMessage
+import org.example.dto.LocationDto
+import org.example.dto.MessageDto
 import org.glassfish.grizzly.http.HttpRequestPacket
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.websockets.*
+import org.springframework.boot.CommandLineRunner
+import org.springframework.boot.SpringApplication
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
 
+@SpringBootApplication
+open class Application
 
-fun main() {
-    println("Hello World!")
-
-    start()
-
-    println("Press any key to stop the server...")
-    System.`in`.read()
+fun main(args: Array<String>) {
+    runApplication<Application>(*args)
 }
 
 fun start() {
-//    val server: HttpServer = HttpServer.createSimpleServer("http://localhost", 8080)
     val server: HttpServer = HttpServer.createSimpleServer()
     val addon = WebSocketAddOn()
     for (listener in server.listeners) {
         listener.registerAddOn(addon)
     }
-
 
     val chatApplication: WebSocketApplication = ChatApplication(OptimizedBroadcaster())
     WebSocketEngine.getEngine().register("", "/echo", chatApplication)
@@ -46,9 +48,7 @@ class ChatApplication(
             *listeners
         ) as DefaultWebSocket
 //        socket.setBroadcaster(broadcaster)
-
         sockets.add(socket)
-
         return socket
     }
 
@@ -77,15 +77,33 @@ class ChatApplication(
         super.onFragment(socket, fragment, last)
     }
 
-    override fun onMessage(socket: WebSocket?, text: String?) {
+    override fun onMessage(socket: WebSocket, text: String?) {
         println("onMessage: $text")
-        super.onMessage(socket, text)
+        val message = DtoMapper.MAPPER.readValue(text, BaseMessage::class.java)
+        val type = message.headers["TYPE"]
+        when (type) {
+            "LOCATION" -> {
+                println("on LOCATION")
+                val dto = DtoMapper.MAPPER.readValue(message.payload, LocationDto::class.java)
+            }
+            "MESSAGE" -> {
+                println("on MESSAGE")
+                val dto = DtoMapper.MAPPER.readValue(message.payload, MessageDto::class.java)
+                Thread.sleep(3000)
+                socket.send(DtoMapper.MAPPER.writeValueAsString(
+                    BaseMessage(
+                        mapOf("TYPE" to "MESSAGE"),
+                        DtoMapper.MAPPER.writeValueAsBytes(MessageDto(LocationDto(0.0, 0.0), "Hello, client!"))
+                    )
+                ))
+            }
+        }
     }
 
     override fun onConnect(socket: WebSocket) {
         println("onConnect")
         // socket.sendPing("server sendPing".toByteArray(Charsets.UTF_8))
-        socket.send("CONNECTED")
+        // socket.send("CONNECTED")
         super.onConnect(socket)
     }
 
@@ -96,6 +114,7 @@ class ChatApplication(
 
     override fun onError(webSocket: WebSocket?, t: Throwable?): Boolean {
         println("onError")
+        t?.printStackTrace()
         return super.onError(webSocket, t)
     }
 
