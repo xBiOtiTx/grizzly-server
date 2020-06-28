@@ -42,7 +42,7 @@ internal class ApplicationKtTest {
         }
 
         val messages = listOf(message, location)
-        for (i in 1..1000) {
+        for (i in 1..10000) {
             LOGGER.info("sendMessage $i")
             val session = sessions.random()
             session.sendMessage(messages.random())
