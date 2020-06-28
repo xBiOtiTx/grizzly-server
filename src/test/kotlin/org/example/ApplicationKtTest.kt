@@ -6,7 +6,6 @@ import org.example.dto.MessageDto
 import org.glassfish.grizzly.Grizzly
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.web.socket.*
-import org.springframework.web.socket.adapter.standard.StandardWebSocketSession
 import org.springframework.web.socket.client.WebSocketClient
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 
@@ -43,7 +42,7 @@ internal class ApplicationKtTest {
         }
 
         val messages = listOf(message, location)
-        for (i in 1..10000) {
+        for (i in 1..1000) {
             LOGGER.info("sendMessage $i")
             val session = sessions.random()
             session.sendMessage(messages.random())
